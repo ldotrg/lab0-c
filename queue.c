@@ -12,16 +12,29 @@
 queue_t *q_new()
 {
     queue_t *q = malloc(sizeof(queue_t));
-    /* TODO: What if malloc returned NULL? */
+    if (q == NULL)
+        return q;
     q->head = NULL;
+    q->tail = q->head;
+    q->size = 0;
     return q;
 }
 
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
-    /* TODO: How about freeing the list elements and the strings? */
-    /* Free queue structure */
+    if (q == NULL)
+        return;
+    list_ele_t *curr;
+    list_ele_t *prev = NULL;
+    curr = q->head;
+    while (curr != NULL) {
+        prev = curr;
+        curr = curr->next;
+        if (prev->value)
+            free(prev->value);
+        free(prev);
+    }
     free(q);
 }
 
@@ -35,13 +48,28 @@ void q_free(queue_t *q)
 bool q_insert_head(queue_t *q, char *s)
 {
     list_ele_t *newh;
-    /* TODO: What should you do if the q is NULL? */
-    newh = malloc(sizeof(list_ele_t));
-    /* Don't forget to allocate space for the string and copy it */
-    /* What if either call to malloc returns NULL? */
+    if (s == NULL || q == NULL)
+        goto error_exit;
+    int size = strlen(s);
+    newh = (list_ele_t *) malloc(sizeof(list_ele_t));
+    if (newh == NULL)
+        goto error_exit;
+    newh->value = (char *) malloc(size + 1);
+    if (!newh->value) {
+        free(newh);
+        goto error_exit;
+    }
+    memset(newh->value, 0, size);
+    strncpy(newh->value, s, size);
+    newh->value[size] = 0;
     newh->next = q->head;
     q->head = newh;
+    q->size++;
+    if (q->tail == NULL)
+        q->tail = newh;
     return true;
+error_exit:
+    return false;
 }
 
 /*
@@ -53,9 +81,29 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    /* TODO: You need to write the complete code for this function */
-    /* Remember: It should operate in O(1) time */
-    /* TODO: Remove the above comment when you are about to implement. */
+    list_ele_t *newt;
+    if (s == NULL || q == NULL)
+        goto error_exit;
+    int size = strlen(s);
+    newt = (list_ele_t *) malloc(sizeof(list_ele_t));
+    if (newt == NULL)
+        goto error_exit;
+    newt->value = (char *) malloc(size + 1);
+    if (!newt->value) {
+        free(newt);
+        goto error_exit;
+    }
+    memset(newt->value, 0, size);
+    strncpy(newt->value, s, size);
+    newt->value[size] = 0;
+    newt->next = NULL;
+    q->tail->next = newt;
+    q->tail = newt;
+    q->size++;
+    if (q->head == NULL)
+        q->head = newt;
+    return true;
+error_exit:
     return false;
 }
 
@@ -69,10 +117,18 @@ bool q_insert_tail(queue_t *q, char *s)
  */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
-    /* TODO: You need to fix up this code. */
-    /* TODO: Remove the above comment when you are about to implement. */
-    q->head = q->head->next;
-    return true;
+    if (q == NULL || q->size == 0)
+        return false;
+    list_ele_t *curr = q->head;
+    if (sp && curr->value) {
+        strncpy(sp, curr->value, bufsize - 1);
+        q->head = q->head->next;
+        free(curr->value);
+        free(curr);
+        q->size--;
+        return true;
+    }
+    return false;
 }
 
 /*
@@ -81,9 +137,8 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
  */
 int q_size(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* Remember: It should operate in O(1) time */
-    /* TODO: Remove the above comment when you are about to implement. */
+    if (q)
+        return q->size;
     return 0;
 }
 
@@ -96,8 +151,22 @@ int q_size(queue_t *q)
  */
 void q_reverse(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
+    list_ele_t *prev = NULL;
+    list_ele_t *temp = NULL;
+    list_ele_t *curr;
+    if (q == NULL)
+        return;
+    if (q->size == 1)
+        return;
+    curr = q->head;
+    q->tail = q->head;
+    while (curr != NULL) {
+        temp = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = temp;
+    }
+    q->head = prev;
 }
 
 /*

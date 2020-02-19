@@ -29,6 +29,13 @@ OBJS := qtest.o report.o console.o harness.o queue.o \
         random.o dudect/constant.o dudect/fixture.o dudect/ttest.o
 deps := $(OBJS:%.o=.%.o.d)
 
+OBJS_MY :=  harness.o queue.o main.o report.o
+deps := $(OBJS:%.o=.%.o.d)
+deps := $(OBJS_MY:%.o=.%.o.d)
+main.bin: $(OBJS_MY)
+	$(VECHO) "  LD\t$@\n"
+	$(Q)$(CC) $(LDFLAGS) -o $@ $^ -lm
+
 qtest: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ -lm
