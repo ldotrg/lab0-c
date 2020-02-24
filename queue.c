@@ -245,7 +245,7 @@ void merge_sort(list_ele_t **head_ref)
 void q_sort(queue_t *q)
 {
     list_ele_t *curr = NULL;
-    if (q == NULL)
+    if (q == NULL || q->head == NULL)
         return;
     merge_sort(&(q->head));
     curr = q->head;
