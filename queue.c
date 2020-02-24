@@ -169,6 +169,74 @@ void q_reverse(queue_t *q)
     q->head = prev;
 }
 
+static inline void list_spilt(list_ele_t *head,
+                              list_ele_t **left,
+                              list_ele_t **right)
+{
+    if (head == NULL)
+        return;
+    list_ele_t *slow = head;
+    list_ele_t *fast = head->next;
+
+    while (fast != NULL) {
+        fast = fast->next;
+        if (fast != NULL) {
+            slow = slow->next;
+            fast = fast->next;
+        }
+    }
+    *left = head;
+    *right = slow->next;
+    slow->next = NULL;
+}
+
+static void move_node(list_ele_t **dst, list_ele_t **src)
+{
+    list_ele_t *detached = *src;
+    if (detached == NULL) {
+        return;
+    }
+    *src = detached->next;
+    detached->next = *dst;
+    *dst = detached;
+}
+
+list_ele_t *sorted_merge(list_ele_t *a, list_ele_t *b)
+{
+    list_ele_t *result = NULL;
+    list_ele_t **tail_ref = &result;
+    while (1) {
+        if (a == NULL) {
+            *tail_ref = b;
+            return result;
+        }
+        if (b == NULL) {
+            *tail_ref = a;
+            return result;
+        }
+        if (strcmp(a->value, b->value) < 0) {
+            move_node(tail_ref, &a);
+        } else {
+            move_node(tail_ref, &b);
+        }
+        tail_ref = &((*tail_ref)->next);
+    }
+    return result;
+}
+
+void merge_sort(list_ele_t **head_ref)
+{
+    list_ele_t *head = *head_ref;
+    list_ele_t *left = NULL;
+    list_ele_t *right = NULL;
+    if (head == NULL || head->next == NULL)
+        return;
+    list_spilt(head, &left, &right);
+    merge_sort(&left);
+    merge_sort(&right);
+    *head_ref = sorted_merge(left, right);
+}
+
 /*
  * Sort elements of queue in ascending order
  * No effect if q is NULL or empty. In addition, if q has only one
@@ -176,6 +244,13 @@ void q_reverse(queue_t *q)
  */
 void q_sort(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
+    list_ele_t *curr = NULL;
+    if (q == NULL)
+        return;
+    merge_sort(&(q->head));
+    curr = q->head;
+    while (curr->next != NULL) {
+        curr = curr->next;
+    }
+    q->tail = curr;
 }
