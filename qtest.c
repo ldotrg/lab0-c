@@ -1,5 +1,6 @@
 /* Implementation of testing code for queue code */
 
+#include <errno.h>
 #include <getopt.h>
 #include <signal.h>
 #include <spawn.h>
@@ -35,6 +36,8 @@
 #include "report.h"
 
 /* Settable parameters */
+
+#define HISTORY_LEN 20
 
 /*
  * How large is a queue before it's considered big.
@@ -714,6 +717,7 @@ static bool sanity_check()
     return true;
 }
 
+
 #define BUFSIZE 256
 int main(int argc, char *argv[])
 {
@@ -739,9 +743,16 @@ int main(int argc, char *argv[])
             buf[BUFSIZE - 1] = '\0';
             infile_name = buf;
             break;
-        case 'v':
-            level = atoi(optarg);
+        case 'v': {
+            char *endptr;
+            errno = 0;
+            level = strtol(optarg, &endptr, 10);
+            if (errno != 0 || endptr == optarg) {
+                fprintf(stderr, "Invalid verbosity level\n");
+                exit(EXIT_FAILURE);
+            }
             break;
+        }
         case 'l':
             strncpy(lbuf, optarg, BUFSIZE);
             buf[BUFSIZE - 1] = '\0';
@@ -759,6 +770,11 @@ int main(int argc, char *argv[])
     init_cmd();
     console_init();
 
+    /* Trigger call back function(auto completion) */
+    linenoiseSetCompletionCallback(completion);
+
+    linenoiseHistorySetMaxLen(HISTORY_LEN);
+    linenoiseHistoryLoad(HISTORY_FILE); /* Load the history at startup */
     set_verblevel(level);
     if (level > 1) {
         set_echo(true);
